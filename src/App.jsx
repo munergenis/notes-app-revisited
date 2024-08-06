@@ -3,13 +3,17 @@ import Editor from 'components/Editor.jsx'
 import { data } from 'data/data.js'
 import Split from 'react-split'
 import { nanoid } from 'nanoid'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const App = () => {
-  const [notes, setNotes] = useState([])
+  const [notes, setNotes] = useState(() => JSON.parse(localStorage.getItem('notes')) || [])
   const [currentNoteId, setCurrentNoteId] = useState(
     (notes[0] && notes[0].id) || ''
   )
+
+  useEffect(() => {
+    localStorage.setItem('notes', JSON.stringify(notes))
+  }, [notes])
 
   function createNewNote () {
     const newNote = {
@@ -21,13 +25,26 @@ const App = () => {
   }
 
   function updateNote (text) {
-    setNotes((oldNotes) =>
-      oldNotes.map((oldNote) => {
-        return oldNote.id === currentNoteId
-          ? { ...oldNote, body: text }
-          : oldNote
+    setNotes(oldNotes => {
+      let currentNoteIndex
+
+      const newNotes = oldNotes.map((note, index) => {
+        if (note.id === currentNoteId) {
+          currentNoteIndex = index
+
+          return { ...note, body: text }
+        } else {
+          return note
+        }
       })
-    )
+
+      if (currentNoteIndex > 0) {
+        const [currentNote] = newNotes.splice(currentNoteIndex, 1)
+        newNotes.unshift(currentNote)
+      }
+
+      return newNotes
+    })
   }
 
   function findCurrentNote () {
@@ -50,12 +67,14 @@ const App = () => {
                 newNote={createNewNote}
               />
               {
-                currentNoteId &&
-                notes.length > 0 &&
-                <Editor
-                  currentNote={findCurrentNote()}
-                  updateNote={updateNote}
-                />
+                currentNoteId
+                  ? <Editor
+                      currentNote={findCurrentNote()}
+                      updateNote={updateNote}
+                    />
+                  : <div className='flex items-center mx-auto'>
+                      <p>Seleccione una nota</p>
+                    </div>
               }
             </Split>
 

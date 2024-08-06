@@ -1,6 +1,17 @@
 const Sidebar = (props) => {
-  const noteElements = props.notes.map((note, index) => (
-    <div key={note.id}>
+  const noteElements = props.notes.map((note, index) => {
+    let firstLine
+    const firstNewLineIndex = note.body.indexOf('\n')
+    if (firstNewLineIndex < 0 && note.body) {
+      firstLine = note.body
+    } else if (firstNewLineIndex < 1) {
+      firstLine = `New note ${index}`
+    } else {
+      firstLine = note.body.slice(0, firstNewLineIndex)
+    }
+
+    return (
+      <div key={note.id}>
         <div
 
             className={`title ${
@@ -8,10 +19,11 @@ const Sidebar = (props) => {
             }`}
             onClick={() => props.setCurrentNoteId(note.id)}
         >
-            <h4 className="text-snippet">Note {index + 1}</h4>
+            <h4 className="text-snippet">{firstLine}</h4>
         </div>
-    </div>
-  ))
+      </div>
+    )
+  })
 
   return (
     <section className="pane sidebar">
